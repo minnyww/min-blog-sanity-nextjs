@@ -22,7 +22,6 @@ export default function Home({ blogs: initialData, preview }) {
          initialData: offset !== 3 ? undefined : initialData,
       },
    );
-   //  console.log("data : ", blogs);
 
    return (
       <Container>
