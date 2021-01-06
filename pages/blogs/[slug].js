@@ -61,13 +61,13 @@ const BlogDetail = ({ blog, preview }) => {
          )}
          <h1>Hello Detail Page - {blog?.title}</h1>
          <img
-            src={urlFor(blog.coverImage).height(600).fit("max").url()}
+            src={urlFor(blog?.coverImage).height(600).fit("max").url()}
             // className="rounded-circle mr-3"
             height="150px"
             width="100%"
             alt="avatar"
          />
-         <BlogContent blocks={blog.content} serializers={serializers} />
+         <BlogContent blocks={blog?.content} serializers={serializers} />
       </PageLayout>
    );
 };
