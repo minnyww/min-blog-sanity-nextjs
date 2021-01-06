@@ -1,65 +1,78 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import { Container, Row, Col, Button } from "react-bootstrap";
 
-export default function Home() {
-  return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+import BlogNavbar from "components/Navbar";
+import { getAllBlogs } from "lib/api";
+import AuthorIntro from "components/AuthorIntro";
+import CardItem from "components/CardItem";
+import useSWR from "swr";
+import { useState } from "react";
+import { Alert } from "react-bootstrap";
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+const fetcher = (url) => fetch(url).then((res) => res.json());
+export default function Home({ blogs: initialData, preview }) {
+   const [filter, setFilter] = useState({
+      view: { list: 0 },
+   });
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+   const [offset, setOffset] = useState(3);
+   const { data: blogs, error } = useSWR(
+      `/api/blogs/?offset=${offset}`,
+      fetcher,
+      {
+         initialData: offset !== 3 ? undefined : initialData,
+      },
+   );
+   //  console.log("data : ", blogs);
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+   return (
+      <Container>
+         <BlogNavbar />
+         {preview && (
+            <Alert>
+               This is preview mode
+               <Alert.Link href="/api/exit-preview">
+                  Leave preview mode
+               </Alert.Link>
+            </Alert>
+         )}
+         <AuthorIntro />
+         <hr />
+         <Button onClick={() => setOffset((prev) => prev + 3)}>
+            next page
+         </Button>
+         <Row className="mb-5">
+            {!blogs && <div>"loading..."</div>}
+            {blogs &&
+               blogs.length > 0 &&
+               blogs.map((blog) => {
+                  return (
+                     <Col key={blog.slug} md="4">
+                        <CardItem
+                           slug={blog.slug}
+                           author={blog.person}
+                           title={blog.title}
+                           subtitle={blog.subtitle}
+                           image={blog.coverImage}
+                           date={blog.date}
+                           link={{
+                              href: `/blogs/[slug]`,
+                              as: `/blogs/${blog.slug}`,
+                           }}
+                        />
+                     </Col>
+                  );
+               })}
+         </Row>
+      </Container>
+   );
+}
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
-  )
+export async function getStaticProps({ preview = false }) {
+   const blogs = await getAllBlogs({ offset: 3 });
+   return {
+      props: {
+         blogs,
+         preview,
+      },
+   };
 }
